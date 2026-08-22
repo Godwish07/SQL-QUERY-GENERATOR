@@ -1,0 +1,18 @@
+0 verbose cli C:\Program Files\nodejs\node.exe C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js
+1 info using npm@11.17.0
+2 info using node@v24.19.0
+3 silly config load:file:C:\Program Files\nodejs\node_modules\npm\npmrc
+4 silly config load:file:C:\Users\GODWISH\.gemini\antigravity\scratch\sql-query-generator\.npmrc
+5 silly config load:file:C:\Users\GODWISH\.npmrc
+6 silly config load:file:C:\Users\GODWISH\AppData\Roaming\npm\etc\npmrc
+7 verbose title npm install express cors dotenv
+8 verbose argv "install" "express" "cors" "dotenv" "--no-fund" "--no-audit"
+9 verbose logfile logs-max:10 dir:C:\Users\GODWISH\.gemini\antigravity\scratch\sql-query-generator\.npm-cache\_logs\2026-08-21T14_36_33_543Z-
+10 verbose logfile C:\Users\GODWISH\.gemini\antigravity\scratch\sql-query-generator\.npm-cache\_logs\2026-08-21T14_36_33_543Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly idealTree buildDeps
+14 silly fetch manifest cors@^2.8.5
+15 silly packumentCache full:https://registry.npmjs.org/cors cache-miss
+16 http fetch GET https://registry.npmjs.org/cors attempt 1 failed with UNABLE_TO_VERIFY_LEAF_SIGNATURE
+17 http fetch GET https://registry.npmjs.org/cors attempt 2 failed with UNABLE_TO_VERIFY_LEAF_SIGNATURE
