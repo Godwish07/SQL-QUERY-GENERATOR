@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQLForge - Modern SQL Query Generator, Explainer & Sandbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <div class="logo-text">
+          <span class="brand-name">SQLForge</span>
+          <span class="brand-tag">Query Studio</span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="control-group">
+          <label for="globalSchemaSelect">Active Schema:</label>
+          <select id="globalSchemaSelect" class="form-select select-accent">
+            <option value="ecommerce">🛒 E-Commerce & Retail</option>
+            <option value="hr">👥 HR & Corporate</option>
+            <option value="saas">📊 SaaS Analytics</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="globalDialectSelect">SQL Dialect:</label>
+          <select id="globalDialectSelect" class="form-select">
+            <option value="postgres">PostgreSQL</option>
+            <option value="mysql">MySQL / MariaDB</option>
+            <option value="sqlite">SQLite</option>
+            <option value="mssql">MS SQL Server (T-SQL)</option>
+            <option value="oracle">Oracle SQL</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Light/Dark Theme">
+        <span class="theme-icon">🌙</span>
+      </button>
+      <span class="status-badge" id="apiStatusBadge">● API Online</span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <button class="nav-tab active" data-tab="tab-nl">
+      <span class="tab-icon">💬</span> Natural Language to SQL
+    </button>
+    <button class="nav-tab" data-tab="tab-builder">
+      <span class="tab-icon">🎨</span> Visual Query Builder
+    </button>
+    <button class="nav-tab" data-tab="tab-sandbox">
+      <span class="tab-icon">⚡</span> Live Sandbox & Results
+    </button>
+    <button class="nav-tab" data-tab="tab-explainer">
+      <span class="tab-icon">💡</span> Explainer & Formatter
+    </button>
+    <button class="nav-tab" data-tab="tab-schemas">
+      <span class="tab-icon">📚</span> Schema & Cheat Sheet
+    </button>
+    <button class="nav-tab" data-tab="tab-templates">
+      <span class="tab-icon">⭐</span> Templates & History
+    </button>
+  </nav>
+
+  <!-- Main Workspace -->
+  <main class="main-content">
+    
+    <!-- TAB 1: Natural Language to SQL -->
+    <section id="tab-nl" class="tab-pane active">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Natural Language Query Generator</h2>
+            <p class="subtitle">Describe the data you need in plain English, and SQLForge will generate the query automatically.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-group">
+            <label for="nlPromptInput">Your English Prompt:</label>
+            <textarea id="nlPromptInput" class="form-textarea" rows="3" placeholder="e.g. Find top 5 customers from USA who placed orders above 100 dollars ordered by total spent desc"></textarea>
+          </div>
+
+          <!-- Prompt suggestions chips -->
+          <div class="prompt-suggestions">
+            <span class="suggestions-label">Try asking:</span>
+            <div class="chips-container" id="promptChips">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+
+          <!-- Optional AI / API Key drawer -->
+          <details class="ai-config-drawer">
+            <summary>⚙️ Advanced: Connect Google Gemini AI API (Optional)</summary>
+            <div class="drawer-content">
+              <p class="help-text">Leave blank to use SQLForge's high-speed built-in local NLP parser (no API key required). Or provide a Gemini API key for deep AI query generation.</p>
+              <div class="drawer-row">
+                <input type="password" id="geminiApiKeyInput" class="form-input" placeholder="Paste your Gemini API key (optional)">
+                <button id="saveApiKeyBtn" class="btn btn-secondary btn-sm">Save Key</button>
+              </div>
+            </div>
+          </details>
+
+          <div class="action-bar">
+            <button id="generateNlBtn" class="btn btn-primary btn-lg">
+              <span>✨ Generate SQL Query</span>
+            </button>
+            <button id="clearNlBtn" class="btn btn-ghost">Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NL Result Area -->
+      <div id="nlResultArea" class="result-area hidden">
+        <div class="grid-2-col">
+          <!-- SQL Output -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Generated SQL Query</h3>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-secondary" id="copyNlSqlBtn">📋 Copy</button>
+                <button class="btn btn-sm btn-secondary" id="downloadNlSqlBtn">💾 Download .sql</button>
+                <button class="btn btn-sm btn-accent" id="runNlSqlBtn">⚡ Run in Sandbox</button>
+              </div>
+            </div>
+            <div class="code-preview-container">
+              <pre><code id="nlSqlOutput" class="sql-code"></code></pre>
+            </div>
+          </div>
+
+          <!-- Explanation Output -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Query Breakdown & Logic</h3>
+            </div>
+            <div class="card-body" id="nlExplanationOutput">
+              <!-- Explanation cards will be rendered here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Visual Query Builder -->
+    <section id="tab-builder" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Visual SQL Query Builder</h2>
+            <p class="subtitle">Build structured SQL queries visually with columns, joins, filters, grouping, and sorting.</p>
+          </div>
+          <div class="builder-op-selector">
+            <label>Query Type:</label>
+            <select id="builderOperation" class="form-select">
+              <option value="SELECT">SELECT (Read Records)</option>
+              <option value="INSERT">INSERT (Create Record)</option>
+              <option value="UPDATE">UPDATE (Modify Records)</option>
+              <option value="DELETE">DELETE (Remove Records)</option>
+              <option value="CREATE_TABLE">CREATE TABLE (Schema Definition)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Builder SELECT Panel -->
+          <div id="builderSelectPanel" class="builder-subpanel">
+            <!-- 1. FROM Table -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">1</span>
+                <h4>FROM Table (Source)</h4>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="builderFromTable">Primary Table:</label>
+                  <select id="builderFromTable" class="form-select"></select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="builderFromAlias">Table Alias (Optional):</label>
+                  <input type="text" id="builderFromAlias" class="form-input" placeholder="e.g. c">
+                </div>
+                <div class="form-group checkbox-group">
+                  <label>
+                    <input type="checkbox" id="builderDistinct"> DISTINCT Rows
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. SELECT Columns -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">2</span>
+                <h4>SELECT Columns & Aggregates</h4>
+                <button id="addColBtn" class="btn btn-sm btn-secondary">+ Add Column</button>
+              </div>
+              <div id="builderColumnsList" class="dynamic-list">
+                <!-- Column Rows will be added dynamically -->
+              </div>
+            </div>
+
+            <!-- 3. JOINs -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">3</span>
+                <h4>JOIN Tables (Optional)</h4>
+                <button id="addJoinBtn" class="btn btn-sm btn-secondary">+ Add JOIN</button>
+              </div>
+              <div id="builderJoinsList" class="dynamic-list">
+                <!-- Join Rows will be added dynamically -->
+              </div>
+            </div>
+
+            <!-- 4. WHERE Filters -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">4</span>
+                <h4>WHERE Conditions (Filters)</h4>
+                <button id="addFilterBtn" class="btn btn-sm btn-secondary">+ Add Filter</button>
+              </div>
+              <div id="builderWhereList" class="dynamic-list">
+                <!-- Filter Rows will be added dynamically -->
+              </div>
+            </div>
+
+            <!-- 5. GROUP BY & HAVING -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">5</span>
+                <h4>GROUP BY & HAVING (Optional)</h4>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="builderGroupBy">Group By Columns (comma separated):</label>
+                  <input type="text" id="builderGroupBy" class="form-input" placeholder="e.g. category, country">
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. ORDER BY & LIMIT -->
+            <div class="builder-section">
+              <div class="section-title">
+                <span class="step-num">6</span>
+                <h4>ORDER BY & LIMIT (Pagination)</h4>
+              </div>
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label for="builderOrderByCol">Sort Column:</label>
+                  <select id="builderOrderByCol" class="form-select"></select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="builderOrderDirection">Direction:</label>
+                  <select id="builderOrderDirection" class="form-select">
+                    <option value="ASC">ASC (Ascending / A-Z / 1-9)</option>
+                    <option value="DESC">DESC (Descending / Z-A / 9-1)</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="builderLimit">LIMIT:</label>
+                  <input type="number" id="builderLimit" class="form-input" placeholder="e.g. 10" min="1">
+                </div>
+                <div class="form-group flex-1">
+                  <label for="builderOffset">OFFSET:</label>
+                  <input type="number" id="builderOffset" class="form-input" placeholder="e.g. 0" min="0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Builder INSERT / UPDATE / DELETE / DDL Panel -->
+          <div id="builderDmlPanel" class="builder-subpanel hidden">
+            <div class="builder-section">
+              <div class="form-group">
+                <label for="builderDmlTable">Target Table:</label>
+                <select id="builderDmlTable" class="form-select"></select>
+              </div>
+              <div class="form-group">
+                <label for="builderDmlValues">Values (JSON key-value pairs or column list):</label>
+                <textarea id="builderDmlValues" class="form-textarea" rows="4" placeholder='{ "name": "New Item", "price": 49.99, "stock_quantity": 100 }'></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Builder Actions -->
+          <div class="action-bar">
+            <button id="generateBuilderBtn" class="btn btn-primary btn-lg">
+              <span>🔨 Build SQL Query</span>
+            </button>
+            <button id="resetBuilderBtn" class="btn btn-ghost">Reset Form</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Builder Result Preview -->
+      <div id="builderResultArea" class="result-area hidden">
+        <div class="card">
+          <div class="card-header">
+            <h3>Generated SQL</h3>
+            <div class="btn-group">
+              <button class="btn btn-sm btn-secondary" id="copyBuilderSqlBtn">📋 Copy</button>
+              <button class="btn btn-sm btn-secondary" id="downloadBuilderSqlBtn">💾 Download .sql</button>
+              <button class="btn btn-sm btn-accent" id="runBuilderSqlBtn">⚡ Run in Sandbox</button>
+            </div>
+          </div>
+          <div class="code-preview-container">
+            <pre><code id="builderSqlOutput" class="sql-code"></code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Interactive Sandbox & Results -->
+    <section id="tab-sandbox" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Interactive Live SQL Sandbox</h2>
+            <p class="subtitle">Execute queries directly against the pre-loaded in-memory database and inspect live tabular results.</p>
+          </div>
+          <div class="btn-group">
+            <button id="formatSandboxSqlBtn" class="btn btn-sm btn-secondary">✨ Format SQL</button>
+            <button id="executeSandboxBtn" class="btn btn-sm btn-accent">▶ Execute Query</button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="editor-container">
+            <textarea id="sandboxSqlInput" class="code-editor" rows="6" spellcheck="false" placeholder="Write or paste your SQL query here..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sandbox Results Table -->
+      <div class="card results-card">
+        <div class="card-header">
+          <div class="results-header-info">
+            <h3>Query Results</h3>
+            <span id="sandboxExecutionStats" class="stats-badge">Ready to run</span>
+          </div>
+          <div class="btn-group" id="exportBtnGroup">
+            <button id="exportCsvBtn" class="btn btn-sm btn-secondary" disabled>📥 Export CSV</button>
+            <button id="exportJsonBtn" class="btn btn-sm btn-secondary" disabled>📥 Export JSON</button>
+          </div>
+        </div>
+        <div class="table-container" id="sandboxTableContainer">
+          <div class="empty-state">
+            <p class="empty-icon">📊</p>
+            <p>Execute a SQL query above to view results table.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: SQL Explainer & Formatter -->
+    <section id="tab-explainer" class="tab-pane">
+      <div class="grid-2-col">
+        <div class="card">
+          <div class="card-header">
+            <h3>Input SQL Query</h3>
+          </div>
+          <div class="card-body">
+            <textarea id="explainerSqlInput" class="code-editor" rows="10" placeholder="Paste any SQL query here to explain or format it..."></textarea>
+            <div class="action-bar">
+              <button id="explainQueryBtn" class="btn btn-primary">💡 Explain Query</button>
+              <button id="formatQueryBtn" class="btn btn-secondary">✨ Beautify / Format</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Analysis & Step-by-Step Breakdown</h3>
+            <button id="copyExplainerFormattedBtn" class="btn btn-sm btn-secondary hidden">📋 Copy Formatted</button>
+          </div>
+          <div class="card-body" id="explainerResultContainer">
+            <div class="empty-state">
+              <p class="empty-icon">🔍</p>
+              <p>Paste a query and click <strong>Explain Query</strong> to get a breakdown.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Schema Explorer & Cheat Sheet -->
+    <section id="tab-schemas" class="tab-pane">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Database Schema & Data Model Explorer</h2>
+            <p class="subtitle">Explore active tables, column data types, constraints, and relationships.</p>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="schemaTablesGrid" class="schema-tables-grid">
+            <!-- Table cards rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>SQL Cheat Sheet & Quick Reference</h3>
+        </div>
+        <div class="card-body">
+          <div class="cheatsheet-grid">
+            <div class="cheatsheet-item">
+              <h4>Aggregation Functions</h4>
+              <code>COUNT(col)</code>: Total count of rows<br>
+              <code>SUM(col)</code>: Sum of numeric values<br>
+              <code>AVG(col)</code>: Arithmetic mean<br>
+              <code>MIN(col) / MAX(col)</code>: Lowest / Highest
+            </div>
+            <div class="cheatsheet-item">
+              <h4>Joins</h4>
+              <code>INNER JOIN</code>: Matching rows only<br>
+              <code>LEFT JOIN</code>: All left + matching right<br>
+              <code>RIGHT JOIN</code>: All right + matching left<br>
+              <code>FULL JOIN</code>: All rows from both
+            </div>
+            <div class="cheatsheet-item">
+              <h4>Filtering (WHERE)</h4>
+              <code>LIKE '%pattern%'</code>: String wildcard<br>
+              <code>IN ('a', 'b')</code>: List membership<br>
+              <code>BETWEEN 10 AND 50</code>: Range check<br>
+              <code>IS NULL / IS NOT NULL</code>: Null check
+            </div>
+            <div class="cheatsheet-item">
+              <h4>Pagination & Sort</h4>
+              <code>ORDER BY col DESC</code>: Reverse sort<br>
+              <code>LIMIT 10 OFFSET 20</code>: Pagination<br>
+              <code>GROUP BY col HAVING COUNT(*) > 1</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: Templates & History -->
+    <section id="tab-templates" class="tab-pane">
+      <div class="grid-2-col">
+        <div class="card">
+          <div class="card-header">
+            <h3>Pre-Built SQL Templates</h3>
+          </div>
+          <div class="card-body" id="templatesContainer">
+            <!-- Templates will be rendered here -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3>Recent Query History</h3>
+            <button id="clearHistoryBtn" class="btn btn-sm btn-ghost">Clear History</button>
+          </div>
+          <div class="card-body" id="historyContainer">
+            <div class="empty-state">
+              <p class="empty-icon">📜</p>
+              <p>No queries in history yet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>⚡ <strong>SQLForge</strong> - Powered by Node.js & Express REST API | Multi-Dialect SQL Generator</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
